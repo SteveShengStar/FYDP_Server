@@ -17,27 +17,14 @@ module.exports = async (req, res) => {
             // return
             //let path = __dirname + "/resources/static/assets/uploads/" + req.body.fileName;
             
-            // Raw
-            await data.results.putAll(req.body);
             
+            await data.results.putAll(req.body.map(e => {
+                return {...e, date: new Date()}
+            }));
+
             res.setHeader('Content-Type', 'application/json');
             res.statusCode = 200;
-            res.end({message: "Successfully stored the data!"});
-
-
-            // data.results.getAll()
-            //     .then(() => {
-            //         res.status(200).send({
-            //             message:
-            //                 "Uploaded the file successfully: ",
-            //         });
-            //     })
-            //     .catch((error) => {
-            //         res.status(500).send({
-            //             message: "Fail to import data into database!",
-            //             error: error.message,
-            //         });
-            //     });
+            res.end(JSON.stringify({message: "Successfully stored the data!"}));
 
 
             // fs.createReadStream(path)
@@ -67,11 +54,11 @@ module.exports = async (req, res) => {
             console.log(error);
             res.setHeader('Content-Type', 'application/json');
             res.statusCode = 500;
-            res.end( {message: "An error occurred while trying to store the data."} );
+            res.end( JSON.stringify({message: "An error occurred while trying to store the data."}) );
         }
     } else {
         res.setHeader('Content-Type', 'application/json');
         res.statusCode = 404;
-        res.end( {message: "Endpoint could not be found."} );
+        res.end( JSON.stringify({message: "Endpoint could not be found."}) );
     }
 }

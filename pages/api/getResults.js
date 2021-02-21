@@ -5,7 +5,7 @@ module.exports = async (req, res) => {
         await data.initIfNotStarted();
 
         try {
-            await data.results.getAll(req.body);
+            const result = await data.results.getAll();
             
             res.setHeader('Content-Type', 'application/json');
             res.statusCode = 200;
@@ -15,11 +15,11 @@ module.exports = async (req, res) => {
 
             res.setHeader('Content-Type', 'application/json');
             res.statusCode = 500;
-            res.end( {message: "An error occurred while retrieving the data."} );
+            res.end( JSON.stringify({message: "An error occurred while retrieving the data."}) );
         }
     } else {
         res.setHeader('Content-Type', 'application/json');
         res.statusCode = 404;
-        res.end( {message: "Endpoint could not be found."} );
+        res.end( JSON.stringify({message: "Endpoint could not be found."}) );
     }
 };
