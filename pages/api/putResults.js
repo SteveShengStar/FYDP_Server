@@ -1,30 +1,95 @@
 const fs = require("fs");
-const csv = require("fast-csv");
+// const csv = require("fast-csv");
+const csv = require('csv-parser');
+
 
 const data = require("../../backend/data/index");
+var formidable = require('formidable')
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
     if (req.method === 'POST') {
+
         await data.initIfNotStarted();
         try {
-            // if (req.body.fileName == undefined) {
-            //     return res.status(400).send("Please upload a CSV file!");
-            // }
-
-            //let resultRows = [];
-            // console.log(req.body.file);
-            // res.status(200).end();
+            // Do some error checking here.
+            // console.log("__filename")
+            // console.log(module.path)
+            // res.setHeader('Content-Type', 'application/json');
+            // res.statusCode = 200;
+            // res.end(JSON.stringify({message: "Good"}));
             // return
-            //let path = __dirname + "/resources/static/assets/uploads/" + req.body.fileName;
-            
-            
-            await data.results.putAll(req.body.map(e => {
-                return {...e, date: new Date()}
-            }));
 
-            res.setHeader('Content-Type', 'application/json');
-            res.statusCode = 200;
-            res.end(JSON.stringify({message: "Successfully stored the data!"}));
+            var form = new formidable.IncomingForm({ keepExtensions: true });
+
+            // form.parse(req, function(err, fields, files) {
+            //     if (err) {
+            //         console.error(err.message);
+
+            //         res.setHeader('Content-Type', 'application/json');
+            //         res.statusCode = 500;
+            //         res.end( JSON.stringify({message: "An error occurred while uploading the file."}) );
+                    
+            //         return;
+            //     }
+
+            //     console.log("fields")
+            //     console.log(fields)
+
+            //     console.log("files")
+            //     console.log(files)
+
+            //     res.setHeader('Content-Type', 'application/json');
+            //     res.statusCode = 200;
+            //     res.end(JSON.stringify({message: "Good"}));
+
+            //     return;
+            // });
+
+            form.parse(req)
+                .on('fileBegin', (name, file) => {
+                    file.path = 'resources/static/assets/uploads/' + file.name
+                })
+                .on('file', (name, file) => {
+
+                    fs.createReadStream(file.path)
+                        .pipe(csv())
+                        .on('data', (row) => {
+                            console.log(row);
+                        })
+                        .on('end', () => {
+                            console.log('CSV file successfully processed');
+                        });
+
+                    // Reading the file
+                    // const data = fs.readFileSync(file.path);
+                    // data.readFileSync("");
+                    // fs.writeFileSync(`resources/static/assets/uploads/${file.name}`, data);
+                    // fs.unlinkSync(file.path);
+
+                    console.log('Uploaded file: ', name, file)
+                })
+                .on('end', () => {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.statusCode = 200;
+                    res.end(JSON.stringify({message: "Good"}));
+                })
+
+
+
+
+
+
+            // let resultRows = [];
+            // let path = __dirname + "/resources/static/assets/uploads/" + req.body.fileName;
+            
+            
+            // await data.results.putAll(req.body.map(e => {
+            //     return {...e, date: new Date()}
+            // }));
+
+            // res.setHeader('Content-Type', 'application/json');
+            // res.statusCode = 200;
+            // res.end(JSON.stringify({message: "Successfully stored the data!"}));
 
 
             // fs.createReadStream(path)
@@ -40,7 +105,7 @@ module.exports = async (req, res) => {
             //             .then(() => {
             //                 res.status(200).send({
             //                     message:
-            //                         "Uploaded the file successfully: " + req.body.fileName,
+            //                         "Uploaded the file successfully: ", //+ req.body.fileName,
             //                 });
             //             })
             //             .catch((error) => {
@@ -62,3 +127,8 @@ module.exports = async (req, res) => {
         res.end( JSON.stringify({message: "Endpoint could not be found."}) );
     }
 }
+export const config = {
+    api: {
+        bodyParser: false,
+    },
+};
