@@ -1,6 +1,8 @@
 const fs = require("fs");
 // const csv = require("fast-csv");
 const csv = require('csv-parser');
+const {spawn} = require('child_process');
+
 
 
 const data = require("../../backend/data/index");
@@ -50,23 +52,41 @@ export default async (req, res) => {
                     file.path = 'resources/static/assets/uploads/' + file.name
                 })
                 .on('file', (name, file) => {
+                    var dataToSend;
+                    // Spawn new child process to call the python script
+                    const python = spawn('python', ['python1.py']);
+                    // Collect data from Script
+                    python.stdout.on('data', function (data) {
+                        console.log('Pipe data from python script ...');
+                        dataToSend = data.toString();
+                    });
 
-                    fs.createReadStream(file.path)
-                        .pipe(csv())
-                        .on('data', (row) => {
-                            console.log(row);
-                        })
-                        .on('end', () => {
-                            console.log('CSV file successfully processed');
-                        });
+                    // in close event we are sure that stream from child process is closed
+                    python.on('close', (code) => {
+                        console.log(dataToSend)
+                        console.log(`child process close all stdio with code ${code}`);
+                    // send data to browser
+                    })
 
-                    // Reading the file
+
+
+                    // Reading the file (version 1)
+                    // fs.createReadStream(file.path)
+                    //     .pipe(csv())
+                    //     .on('data', (row) => {
+                    //         console.log(row);
+                    //     })
+                    //     .on('end', () => {
+                    //         console.log('CSV file successfully processed');
+                    //     });
+                    // console.log('Uploaded file: ', name, file)
+
+
+                    // Reading the file (version 2)
                     // const data = fs.readFileSync(file.path);
                     // data.readFileSync("");
                     // fs.writeFileSync(`resources/static/assets/uploads/${file.name}`, data);
                     // fs.unlinkSync(file.path);
-
-                    console.log('Uploaded file: ', name, file)
                 })
                 .on('end', () => {
                     res.setHeader('Content-Type', 'application/json');
