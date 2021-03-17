@@ -1,88 +1,126 @@
-import React from 'react'
+import React, {useState} from 'react'
 import Head from 'next/head'
-import Nav from '../components/nav'
+import styled from 'styled-components';
+import TextInput from '../components/TextInput'
+import SelectInput from '../components/SelectInput'
+import FileUploadButton from '../components/FileUploadButton'
 
-const Home = () => (
-  <div>
-    <Head>
-      <title>Home</title>
-      <link rel='icon' href='/favicon.ico' />
-    </Head>
+const SubmitButton = styled.button`
+    background-color: #00cc00;
+    color: #000;
 
-    <Nav />
+    border: 1px solid #606060;
+    border-radius: 5px;
+    width: 120px;
+    height: 25px;
 
-    <div className='hero'>
-      <h1 className='title'>Welcome to Next.js!</h1>
-      <p className='description'>
-        To get started, edit <code>pages/index.js</code> and save to reload.
-      </p>
+    &:hover {
+        color: #424242; 
+        cursor: pointer;
+        opacity: 0.8;
+    }
+    &:active {
+        color: #000;
+        cursor: pointer;
+        opacity: 1;
+    }
+`
 
-      <div className='row'>
-        <a href='https://nextjs.org/docs' className='card'>
-          <h3>Documentation &rarr;</h3>
-          <p>Learn more about Next.js in the documentation.</p>
-        </a>
-        <a href='https://nextjs.org/learn' className='card'>
-          <h3>Next.js Learn &rarr;</h3>
-          <p>Learn about Next.js by following an interactive tutorial!</p>
-        </a>
-        <a
-          href='https://github.com/zeit/next.js/tree/master/examples'
-          className='card'
-        >
-          <h3>Examples &rarr;</h3>
-          <p>Find other example boilerplates on the Next.js GitHub.</p>
-        </a>
-      </div>
-    </div>
+const Home = () => {
+  const [uploadedFile, setUploadedFile] = useState(undefined);
+  const [mlModel, setMlModel] = useState("99");
+  const [form, setFormValues] = useState({
+      max_iter: "",
+      dual: "",
+      C: "",
+  });
 
-    <style jsx>{`
-      .hero {
-        width: 100%;
-        color: #333;
-      }
-      .title {
-        margin: 0;
-        width: 100%;
-        padding-top: 80px;
-        line-height: 1.15;
-        font-size: 48px;
-      }
-      .title,
-      .description {
-        text-align: center;
-      }
-      .row {
-        max-width: 880px;
-        margin: 80px auto 40px;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-around;
-      }
-      .card {
-        padding: 18px 18px 24px;
-        width: 220px;
-        text-align: left;
-        text-decoration: none;
-        color: #434343;
-        border: 1px solid #9b9b9b;
-      }
-      .card:hover {
-        border-color: #067df7;
-      }
-      .card h3 {
-        margin: 0;
-        color: #067df7;
-        font-size: 18px;
-      }
-      .card p {
-        margin: 0;
-        padding: 12px 0 0;
-        font-size: 13px;
-        color: #333;
-      }
-    `}</style>
-  </div>
-)
+  const updateForm = (label, value) => {
+    setFormValues({
+      ...form,
+      [label]: value,
+    })
+  }
+  const onSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData();
 
+    formData.append('file', uploadedFile)
+    formData.append('mlModelName', mlModel)
+    formData.append('trainPercent', 0.8)
+    formData.append('testPercent', 0.2)
+    formData.append('maxIter', form.max_iter)
+    formData.append('dual', form.dual)
+    formData.append('C', form.C)
+
+    fetch("http://localhost:3000/api/putResults", {
+      mode: 'no-cors',
+      method: "POST",
+      headers: {
+        "Content-Type": "multipart/form-data",
+        "Accept": "application/json",
+        "type": "formData"
+      },
+      body: formData
+    }).then(function (res) {
+      console.log("Success")
+    })
+  }
+  //console.log(Object.keys(form).map(k => k))
+  return (<div>
+            <Head>
+                <title>Home</title>
+                <link rel='icon' href='/favicon.ico' />
+            </Head>
+            <div>
+                <div style={{float: 'left', width: '66.67%'}}>
+                  <div style={{
+                    padding: '20px'
+                  }}/>
+                </div>
+            </div>
+            <div style={{float: 'left', width: '33.33%'}}>
+              <div style={{
+                padding: '20px'
+              }}>
+                <div>
+
+                  <div style={{marginBottom: '20px'}}>
+                    <div style={{marginBottom: '5px'}}>Upload a file containing training data.</div>
+                    <div>
+                      <input type="file" id="upload-btn" hidden />
+                      <FileUploadButton 
+                        for="upload-btn" 
+                        uploadedFileName={uploadedFile ? uploadedFile.name : "No file chosen"} 
+                        setUploadedFile={setUploadedFile}
+                      />
+                    </div>
+                  </div>
+
+                  <SelectInput
+                    label={"Machine Learning Model"}
+                    currentOpt={mlModel}
+                    handleUpdateField={(opt) => setMlModel(opt)}
+                  />
+                  {
+                    Object.keys(form).map((k) => (
+                      <TextInput
+                        key={k} 
+                        label={k} 
+                        currentValue={form[k]} 
+                        handleUpdateField={updateForm}
+                      />
+                    ))
+                  }
+                  
+                  <SubmitButton onClick={onSubmit}>
+                      Start Training
+                  </SubmitButton>
+                </div>
+              </div>
+            </div>
+          </div>
+    )
+};
 export default Home
+

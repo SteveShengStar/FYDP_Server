@@ -26,9 +26,16 @@ const TrainingData = new Schema({
         type: String,
         //required: true
     },
-    parameterValues: {
-        type: [Parameter]
-    },
+    parameterValues: [{
+        name: {
+            type: String,
+            //required: true,
+        },
+        value: {
+            type: Number,
+            //required: true,
+        }
+    }],
     trainTestSplit: {
         train: {
             type: Number

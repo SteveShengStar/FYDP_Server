@@ -12,8 +12,7 @@ results.getAll = async (filter = {}) => {
  * Insert a new entry into ML Training results table.
  */
 results.putAll = async (data) => {
-    console.log("data");
-    console.log(data);
-    return await TrainingResults.insertMany(data);
+    console.log(data)
+    return TrainingResults.create(data);
 };
 module.exports = results;
