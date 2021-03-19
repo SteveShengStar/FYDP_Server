@@ -27,8 +27,8 @@ const SubmitButton = styled.button`
 `
 
 const Home = () => {
-  const [uploadedFile, setUploadedFile] = useState(undefined);
-  const [mlModel, setMlModel] = useState("99");
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [mlModel, setMlModel] = useState("");
   const [form, setFormValues] = useState({
       max_iter: "",
       dual: "",
@@ -45,8 +45,8 @@ const Home = () => {
     e.preventDefault();
     const formData = new FormData();
 
-    formData.append('file', uploadedFile)
-    formData.append('mlModelName', mlModel)
+    formData.append('files', uploadedFiles)
+    formData.append('mlModelName', mlModel.value)
     formData.append('trainPercent', 0.8)
     formData.append('testPercent', 0.2)
     formData.append('maxIter', form.max_iter)
@@ -57,9 +57,9 @@ const Home = () => {
       mode: 'no-cors',
       method: "POST",
       headers: {
-        "Content-Type": "multipart/form-data",
+        //"Content-Type": "multipart/form-data",
         "Accept": "application/json",
-        "type": "formData"
+        //"type": "formData"
       },
       body: formData
     }).then(function (res) {
@@ -88,11 +88,9 @@ const Home = () => {
                   <div style={{marginBottom: '20px'}}>
                     <div style={{marginBottom: '5px'}}>Upload a file containing training data.</div>
                     <div>
-                      <input type="file" id="upload-btn" hidden />
                       <FileUploadButton 
-                        for="upload-btn" 
-                        uploadedFileName={uploadedFile ? uploadedFile.name : "No file chosen"} 
-                        setUploadedFile={setUploadedFile}
+                        label={uploadedFiles.length == 0 ? "No files chosen" : uploadedFiles.length.toString() + " files chosen"} 
+                        addUploadedFiles={(newFiles) => setUploadedFiles([...uploadedFiles, ...newFiles])}
                       />
                     </div>
                   </div>

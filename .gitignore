@@ -29,3 +29,6 @@ next.config.js
 components/*
 public/*
 resources/*
+
+# other
+/pages/api/extra.js

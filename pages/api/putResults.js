@@ -11,29 +11,45 @@ export default async (req, res) => {
         try {
             // TODO: Do some error checking here.
             var form = new formidable.IncomingForm({ keepExtensions: true });
-            var fields = {}
+            
+            var fields = {fileNames: []}
 
             form.parse(req)
-                .on('fileBegin', (name, file) => {
-                    // Set the local directory path for storing this uploaded file
-                    file.path = 'resources/static/assets/uploads/' + name
-                    fields.fileName = file.path
-                })
+                // .on('fileBegin', (name, file) => {
+                //     // Set the local directory path for storing this uploaded file
+                //     file.path = 'resources/static/assets/uploads/' + name
+                //     fields.fileNames.unshift(file.path)
+
+                //     console.log("file.path")
+                //     console.log(file.path)
+                // })
                 .on('field', (name, value) => {
                     // Collect name/value pairs inside "fields" object
+                    // console.log("name + value");
+                    // console.log(name, value);
+                    if (name === "files") {
+                        console.log("********************************")
+                        console.log(value[0])
+                    }
                     fields[name] = value
+                })
+                .on('file', (field, file) => {
+                    // Collect name/value pairs inside "fields" object
+                    // console.log("field + file");
+                    // console.log(field, file);
+                    fields[field] = file
                 })
                 .on('end', () => {
                     var modelAccuracy;
-                    const {fileName, mlModelName, trainPercent, testPercent, ...params} = fields;
+                    const {fileNames, mlModelName, trainPercent, testPercent, ...params} = fields;
                     
 
                     const {maxIter, dual, C} = params;
                     Object.keys(params).map(function (key, index) { 
                         params[key] = parseInt(params[key]);            // Cast parameters to integers
                     });                                                 // Makes it type-compatible to store inside the DB
-                    var startTime = new Date();
-                    const py_process = spawn('python', ['ml_model.py', fields.fileName, testPercent, maxIter, dual, C]) // Spawn new child process to call the python script
+                    // var startTime = new Date();
+                    const py_process = spawn('python', ['ml_model.py', fields.fileNames.join(","), testPercent, maxIter, dual, C]) // Spawn new child process to call the python script
                     
 
                     // Collect data from Python Script stdout stream
@@ -52,7 +68,7 @@ export default async (req, res) => {
                         // console.log("timeDiff")
                         // console.log(timeDiff)
                         
-                        // let date = new Date();
+                        let date = new Date();
                         let paramsCopy = [];
                         Object.keys(params).map(function (key, index) {
                             paramsCopy.push({
@@ -60,10 +76,14 @@ export default async (req, res) => {
                                 value: params[key]
                             })
                         });
+                        console.log("paramsCopy")
+                        console.log(paramsCopy)
+                        console.log("fields")
+                        console.log(fields)
 
                         let dataToStore = 
                             {
-                                fileName: fileName, 
+                                fileNames: fileNames, 
                                 date: date,
                                 mlModelName: mlModelName, 
                                 parameterValues: paramsCopy, 
