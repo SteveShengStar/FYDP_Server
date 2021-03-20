@@ -41,7 +41,7 @@ const Home = () => {
     var_smoothing: ""
   });
   const [trainingResults, setTrainingResults] = useState([]);
-  const [fileListExpanded, setFileListExpanded] = useState(false);
+  const [fileListExpanded, setFileListExpanded] = useState([]);
 
   const updateForm = (mlModelName, label, value) => {
     switch(mlModelName) {
@@ -60,6 +60,7 @@ const Home = () => {
     console.log("trainingResults")
     console.log(trainingResults)
     setTrainingResults([...trainingResults, newResultSet])
+    setFileListExpanded(fileListExpanded.concat(false))   // Ensure the most recent result's file list is collapsed (not expanded)
   }
 
   const onSubmit = (e) => {
@@ -120,37 +121,43 @@ const Home = () => {
   }
 
   return (<div style={{display: 'flex', minHeight: '100vh'}}>
-            <div style={{boxSizing: 'border-box', flexBasis: '60%', backgroundColor: "#F0F0F0", borderRight: "2px solid black"}}>
+            <div style={{boxSizing: 'border-box', flexBasis: '60%', backgroundColor: "#e3e3e3", borderRight: "2px solid black"}}>
               <div style={{ padding: '20px'}}>
 
                 <h2 style={{marginBottom: '30px'}}>Training Results</h2>
                 {trainingResults.length > 0 ?
                   (trainingResults.map((r, i) => (
-                    <div key={i}>
-                      <div>
-                        { !fileListExpanded ? 
-                          (<div><div><b>Files that were Processed:</b> {r.fileNames.slice(0, 3).map((fn, j) => <div key={j}>{fn},</div>)}</div>
-                            {
-                              r.fileNames.length > 3 && 
-                              <div>... and many others <span> </span>
-                              <span style={{cursor: 'pointer', textDecoration: 'underline', color: '#0000ff'}} onClick={() => setFileListExpanded(true)}>Click to Expand</span></div>
-                            }
-                            </div>
-                          )
-                          :
-                          (<div><div><b>Files that were Processed:</b> {r.fileNames.map((fn, j) => <div key={j}>{fn},</div>)}</div>
-                           <div><span style={{cursor: 'pointer', textDecoration: 'underline', color: '#0000ff'}} onClick={() => setFileListExpanded(false)}>Click to Collapse</span></div></div>
-                          )
-                        }
-                      </div>
+                    <div key={i} style={{ marginBottom: '20px',
+                                          padding: '10px 15px',
+                                          borderRadius: '5px',
+                                          backgroundColor: '#ffffff'}}>
                       <div>
                         <span><b>Date:</b> {r.date}</span>
                       </div>
                       <div>
-                        <span><b>ML Model Used:</b> {r.mlModelName}</span>
+                        { 
+                            fileListExpanded[i] ? 
+                            <div>
+                              <div>
+                                <b style={{textDecoration: 'underline'}}>Files that were Processed:</b> {r.fileNames.map((fn, j) => <div key={j}>{fn},</div>)}
+                              </div>
+                              <div><span style={{cursor: 'pointer', textDecoration: 'underline', color: '#0000ff'}} onClick={() => setFileListExpanded(fileListExpanded.slice(0,i).concat(!fileListExpanded[i]).concat(fileListExpanded.slice(i+1)))}>Click to Collapse</span></div>
+                            </div>
+                              :
+                            <div><div><b style={{textDecoration: 'underline'}}>Files that were Processed:</b> {r.fileNames.slice(0, 3).map((fn, j) => <div key={j}>{fn},</div>)}</div>
+                              {
+                                r.fileNames.length > 3 && 
+                                <div>... and many others <span> </span>
+                                <span style={{cursor: 'pointer', textDecoration: 'underline', color: '#0000ff'}} onClick={() => setFileListExpanded(fileListExpanded.slice(0,i).concat(!fileListExpanded[i]).concat(fileListExpanded.slice(i+1)))}>Click to Expand</span></div>
+                              }
+                            </div> 
+                        }
                       </div>
                       <div>
-                        <div><b>Parameters Used:</b> {r.parameterValues.map((param, j) => <div key={j}>{param.name}: {param.value}</div>)}</div>
+                        <span><b>ML Model used:</b> {r.mlModelName}</span>
+                      </div>
+                      <div>
+                        <div><b style={{textDecoration: 'underline'}}>Parameters used:</b> {r.parameterValues.map((param, j) => <div key={j}>{param.name}: {param.value}</div>)}</div>
                       </div>
                       <div>
                         <span><b>Train/Test Split:</b> {r.trainTestSplit.train * 100}:{r.trainTestSplit.test * 100}</span>
