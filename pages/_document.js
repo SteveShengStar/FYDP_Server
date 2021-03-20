@@ -34,7 +34,7 @@ export default class MyDocument extends Document {
             <Head>
               <title>Home</title>
             </Head>
-            <body style={{margin: 0, overflow:'hidden'}}>
+            <body style={{margin: 0, overflow:'auto'}}>
                 <Main />
                 <NextScript />
             </body>

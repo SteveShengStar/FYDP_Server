@@ -40,6 +40,8 @@ const Home = () => {
   const [nBayesForm, setNBayesFormValues] = useState({
     var_smoothing: ""
   });
+  const [trainingResults, setTrainingResults] = useState([]);
+  const [fileListExpanded, setFileListExpanded] = useState(false);
 
   const updateForm = (mlModelName, label, value) => {
     switch(mlModelName) {
@@ -51,6 +53,14 @@ const Home = () => {
         break;
     }
   };
+
+  const addTrainingResults = (newResultSet) => {
+    console.log("newResultSet")
+    console.log(newResultSet)
+    console.log("trainingResults")
+    console.log(trainingResults)
+    setTrainingResults([...trainingResults, newResultSet])
+  }
 
   const onSubmit = (e) => {
     e.preventDefault();
@@ -80,8 +90,10 @@ const Home = () => {
         "Accept": "application/json",
       },
       body: formData
-    }).then(function (res) {
-      console.log("Success")
+    })
+    .then(res => res.json())
+    .then(function (res) {
+      addTrainingResults(res.body);
     })
   };
 
@@ -108,17 +120,61 @@ const Home = () => {
   }
 
   return (<div>
-            <div style={{boxSizing: 'border-box', float: 'left', width: '66.67%', height: "100vw", backgroundColor: "#F0F0F0", borderRight: "2px solid black"}}>
-              <div style={{ padding: '20px'}}></div>
+            <div style={{boxSizing: 'border-box', float: 'left', width: '66.67%', height: "100vh", backgroundColor: "#F0F0F0", borderRight: "2px solid black"}}>
+              <div style={{ padding: '20px'}}>
+
+                <h2 style={{marginBottom: '30px'}}>Training Results</h2>
+                {trainingResults.length > 0 ?
+                  (trainingResults.map((r, i) => (
+                    <div key={i}>
+                      <div>
+                        { !fileListExpanded ? 
+                          (<div><div><b>Files that were Processed:</b> {r.fileNames.slice(0, 4).map((fn, j) => <div key={j}>{fn},</div>)}</div>
+                            {
+                              r.fileNames.length > 4 && 
+                              <div>... and many others <span> </span>
+                              <span style={{cursor: 'pointer', textDecoration: 'underline', color: '#0000ff'}} onClick={() => setFileListExpanded(true)}>Click to Expand</span></div>
+                            }
+                            </div>
+                          )
+                          :
+                          (<div><div><b>Files that were Processed:</b> {r.fileNames.map((fn, j) => <div key={j}>{fn},</div>)}</div>
+                           <div><span style={{cursor: 'pointer', textDecoration: 'underline', color: '#0000ff'}} onClick={() => setFileListExpanded(false)}>Click to Collapse</span></div></div>
+                          )
+                        }
+                      </div>
+                      <div>
+                        <span><b>Date:</b> {r.date}</span>
+                      </div>
+                      <div>
+                        <span><b>ML Model Used:</b> {r.mlModelName}</span>
+                      </div>
+                      {/* 
+                      <div>
+                        <div>Parameters Used: {Object.keys(r.parameterValues).map((p, j)=> <div key={j}>{p}: {r.parameterValues[p]}</div>)}</div>
+                      </div>
+                      */ }
+                      <div>
+                        <span><b>Train/Test Split ratio:</b> {r.trainTestSplit.train} train: {r.trainTestSplit.test} test</span>
+                      </div>
+                      <div>
+                        <span><b>Accuracy achieved on validation data:</b> {r.modelAccuracy}</span>
+                      </div>
+                    </div>
+                  ))) :
+                  <div>There are no results to show so far. Please upload a file and tune the ML parameters on the Settings Panel (right) to get started.</div>
+                }
+
+              </div>
             </div>
             <div style={{boxSizing: 'border-box', float: 'left', width: '33.33%'}}>
               <div style={{
                 padding: '20px'
               }}>
                 <div>
-
-                  <div style={{marginBottom: '20px'}}>
-                    <div style={{marginBottom: '5px'}}>Upload a file containing training data.</div>
+                  <h2 style={{marginBottom: '30px'}}>Settings Panel</h2>
+                  <div style={{marginBottom: '30px'}}>
+                    <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>1. Upload a File containing Training Data.</h4></div>
                     <div>
                       <FileUploadButton 
                         label={uploadedFiles.length == 0 ? "No files chosen" : uploadedFiles.length.toString() + " files chosen"} 
@@ -127,20 +183,22 @@ const Home = () => {
                       />
                     </div>
                   </div>
+                  <div style={{marginBottom: '30px'}}>
+                    <h4 style={{marginBottom: '5px'}}>2. Tune the Machine Learning Parameters.</h4>
+                    <SelectInput
+                      label="Machine Learning Model"
+                      currentOpt={mlModel}
+                      handleUpdateField={(opt) => setMlModel(opt)}
+                    />
 
-                  <SelectInput
-                    label="Machine Learning Model"
-                    currentOpt={mlModel}
-                    handleUpdateField={(opt) => setMlModel(opt)}
-                  />
-
-                  {
-                    renderFields(mlModel.value)
-                  }
-                  
-                  <SubmitButton onClick={onSubmit}>
-                      Start Training
-                  </SubmitButton>
+                    {
+                      renderFields(mlModel.value)
+                    }
+                    
+                    <SubmitButton onClick={onSubmit}>
+                        Start Training
+                    </SubmitButton>
+                  </div>
                 </div>
               </div>
             </div>
