@@ -107,11 +107,8 @@ const Home = () => {
       }
   }
 
-  return (<div style={{overflow: "hidden"}}>
-            <Head>
-                <title>Home</title>
-            </Head>
-            <div style={{boxSizing: 'border-box', float: 'left', width: '66.67%', height: "700px", backgroundColor: "#F0F0F0", borderRight: "2px solid black"}}>
+  return (<div>
+            <div style={{boxSizing: 'border-box', float: 'left', width: '66.67%', height: "100vw", backgroundColor: "#F0F0F0", borderRight: "2px solid black"}}>
               <div style={{ padding: '20px'}}></div>
             </div>
             <div style={{boxSizing: 'border-box', float: 'left', width: '33.33%'}}>
