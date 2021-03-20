@@ -119,8 +119,8 @@ const Home = () => {
       }
   }
 
-  return (<div>
-            <div style={{boxSizing: 'border-box', float: 'left', width: '66.67%', height: "100vh", backgroundColor: "#F0F0F0", borderRight: "2px solid black"}}>
+  return (<div style={{display: 'flex', minHeight: '100vh'}}>
+            <div style={{boxSizing: 'border-box', flexBasis: '60%', backgroundColor: "#F0F0F0", borderRight: "2px solid black"}}>
               <div style={{ padding: '20px'}}>
 
                 <h2 style={{marginBottom: '30px'}}>Training Results</h2>
@@ -129,9 +129,9 @@ const Home = () => {
                     <div key={i}>
                       <div>
                         { !fileListExpanded ? 
-                          (<div><div><b>Files that were Processed:</b> {r.fileNames.slice(0, 4).map((fn, j) => <div key={j}>{fn},</div>)}</div>
+                          (<div><div><b>Files that were Processed:</b> {r.fileNames.slice(0, 3).map((fn, j) => <div key={j}>{fn},</div>)}</div>
                             {
-                              r.fileNames.length > 4 && 
+                              r.fileNames.length > 3 && 
                               <div>... and many others <span> </span>
                               <span style={{cursor: 'pointer', textDecoration: 'underline', color: '#0000ff'}} onClick={() => setFileListExpanded(true)}>Click to Expand</span></div>
                             }
@@ -149,13 +149,11 @@ const Home = () => {
                       <div>
                         <span><b>ML Model Used:</b> {r.mlModelName}</span>
                       </div>
-                      {/* 
                       <div>
-                        <div>Parameters Used: {Object.keys(r.parameterValues).map((p, j)=> <div key={j}>{p}: {r.parameterValues[p]}</div>)}</div>
+                        <div><b>Parameters Used:</b> {r.parameterValues.map((param, j) => <div key={j}>{param.name}: {param.value}</div>)}</div>
                       </div>
-                      */ }
                       <div>
-                        <span><b>Train/Test Split ratio:</b> {r.trainTestSplit.train} train: {r.trainTestSplit.test} test</span>
+                        <span><b>Train/Test Split:</b> {r.trainTestSplit.train * 100}:{r.trainTestSplit.test * 100}</span>
                       </div>
                       <div>
                         <span><b>Accuracy achieved on validation data:</b> {r.modelAccuracy}</span>
@@ -167,7 +165,7 @@ const Home = () => {
 
               </div>
             </div>
-            <div style={{boxSizing: 'border-box', float: 'left', width: '33.33%'}}>
+            <div style={{boxSizing: 'border-box', flexBasis: '40%'}}>
               <div style={{
                 padding: '20px'
               }}>

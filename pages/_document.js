@@ -32,7 +32,6 @@ export default class MyDocument extends Document {
     return (
         <Html>
             <Head>
-              <title>Home</title>
             </Head>
             <body style={{margin: 0, overflow:'auto'}}>
                 <Main />

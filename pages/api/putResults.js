@@ -7,35 +7,51 @@ export default async (req, res) => {
 
     if (req.method === 'POST') {
         await data.initIfNotStarted();
-
         try {
             // TODO: Do some error checking here.
+
             var form = new formidable.IncomingForm({ keepExtensions: true });
             var fields = {fileNames: []}
             var date;
             form.multiples = true;
             
             form.parse(req)
-                .on('fileBegin', (name, file) => {
-                    // Set the local directory path for storing this uploaded file
+                .on('fileBegin', (name, file) => {      // Set the local directory path for storing this uploaded file
                     file.path = 'resources/static/assets/uploads/' + file.name
                     fields.fileNames.unshift(file.path)
                 })
-                .on('field', (name, value) => {
-                    // Collect name/value pairs inside "fields" object
+                .on('field', (name, value) => {         // Collect name/value pairs inside "fields" object
                     fields[name] = value
                 })
                 .on('end', () => {
                     var modelAccuracy;
                     const {fileNames, mlModelName, trainPercent, testPercent, ...params} = fields;
-                    const {maxIter, dual, C} = params;
-                    Object.keys(params).map(function (key, index) { 
-                        params[key] = parseInt(params[key]);            // Cast parameters to integers
-                    });                                                 // Makes it type-compatible to store inside the DB
-                    // var startTime = new Date();
-                    date = new Date();
-                    const py_process = spawn('python', ['ml_model.py', fields.fileNames.join(","), testPercent, maxIter, dual, C, date.toString()]) // Spawn new child process to call the python script
-                    console.log(date.toString())
+                    // var startTime = new Date();  // This line is used for profiling
+                    date = new Date();              // Get the current date to generate a timestamp for the generated CSV file
+
+                    switch(mlModelName) {           // Spawn new child process to call the python script
+                        case "svm":
+                            const {maxIter, dual, C} = params;
+                            Object.keys(params).map(function (key, index) { 
+                                params[key] = parseInt(params[key]);            // Cast parameters to integers
+                            });                                                 // Makes it type-compatible to store inside the DB
+                            const py_process = spawn('python', ['svm_model.py', fields.fileNames.join(","), testPercent, maxIter, dual, C, date.toString()]) 
+                            break;
+                        case "naive_bayes":         // Use Gaussian Naive Bayes model By default
+                            const {varSmoothing} = params;
+                            Object.keys(params).map(function (key, index) { 
+                                params[key] = parseInt(params[key]);            // Cast parameters to integers
+                            });                                                 // Makes it type-compatible to store inside the DB
+                            const py_process = spawn('python', ['nbayes_model.py', fields.fileNames.join(","), testPercent, varSmoothing, date.toString()]) 
+                            break;
+                        default:   
+                            const {varSmoothing} = params;
+                            Object.keys(params).map(function (key, index) { 
+                                params[key] = parseInt(params[key]);            // Cast parameters to integers
+                            });                                                 // Makes it type-compatible to store inside the DB                 // Use Gaussian Naive Bayes model By default
+                            const py_process = spawn('python', ['nbayes_model.py', fields.fileNames.join(","), testPercent, varSmoothing, date.toString()]) 
+                    }
+
 
                     // Collect data from Python Script stdout stream
                     py_process.stdout.on('data', function (accuracyScore) {
@@ -45,9 +61,9 @@ export default async (req, res) => {
                     py_process.on('close', (code) => {
                         console.log(`child process close all stdio with code ${code}`);
 
-                        // var endTime = new Date();
+                        // var endTime = new Date();    // This is used for profiling
                         // var timeDiff = endTime - startTime; //in ms
-                        // timeDiff /= 1000;           // strip the ms
+                        // timeDiff /= 1000;           // convert to seconds
                         // console.log("timeDiff")
                         // console.log(timeDiff)
 

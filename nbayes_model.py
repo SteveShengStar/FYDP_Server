@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from sklearn.svm import LinearSVC
+from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
@@ -58,10 +58,8 @@ def split_into_periods(filePath):
 
 filePaths = sys.argv[1]
 testPercent = float(sys.argv[2])
-maxIter = int(sys.argv[3])
-dual = int(sys.argv[4])
-C = int(sys.argv[5])
-timeStamp = sys.argv[6]
+varSmoothing = int(sys.argv[3])
+timeStamp = sys.argv[4]
 
 
 datalist = []
@@ -85,8 +83,8 @@ x.insert(0, "Area", areas, True)
 y = categories
 
 
-X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)
-classifier = LinearSVC(max_iter=maxIter, dual=dual, C=C)
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=testPercent, random_state=0)
+classifier = GaussianNB(var_smoothing=varSmoothing)
 classifier.fit(X_train, y_train)
 
 # joblib.dump(classifier, "LinearSVC_"+timeStamp+".pkl")
