@@ -40,12 +40,16 @@ const Home = () => {
       ...form,
       [label]: value,
     })
-  }
+  };
+
   const onSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData();
 
-    formData.append('files', uploadedFiles)
+    for (var i = 0; i < uploadedFiles.length; i++) {
+      var file = uploadedFiles[i];
+      formData.append('uploads[]', file, file.name);
+    }
     formData.append('mlModelName', mlModel.value)
     formData.append('trainPercent', 0.8)
     formData.append('testPercent', 0.2)
@@ -65,8 +69,12 @@ const Home = () => {
     }).then(function (res) {
       console.log("Success")
     })
+  };
+
+  const removeAllFiles = () => {
+      setUploadedFiles([])
   }
-  //console.log(Object.keys(form).map(k => k))
+
   return (<div>
             <Head>
                 <title>Home</title>
@@ -91,6 +99,7 @@ const Home = () => {
                       <FileUploadButton 
                         label={uploadedFiles.length == 0 ? "No files chosen" : uploadedFiles.length.toString() + " files chosen"} 
                         addUploadedFiles={(newFiles) => setUploadedFiles([...uploadedFiles, ...newFiles])}
+                        removeAllFiles={removeAllFiles}
                       />
                     </div>
                   </div>

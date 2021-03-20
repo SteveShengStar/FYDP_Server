@@ -5,27 +5,34 @@ from sklearn.metrics import accuracy_score
 
 import numpy as np
 import pandas as pd
-
+import joblib
+import os
+import sys
 
 WINDOW = 500
 THRESHOLD = 600
 
-def preprocess_data(filename):
-    raw = pd.read_csv(filename)
-    raw = raw.iloc[1:]   # Cut off unnecessary data at the beginning
+def preprocess_data(filePath):
+    try:
+        raw = pd.read_csv(filePath)
+    except:
+        return [], "none"
+
+    data_class = raw.columns[0]
     raw = raw.iloc[:,0]  # Take the first column only
     raw = raw.values     # Convert the pd.Series object into a numpy.ndarray
-
+    
     data1 = [int(d) for d in raw]
     data1_preprocessed = []
-    data1_class = data1[0]
-    for i in range(1, len(data1)):
+    for i in range(len(data1)):
         if i % 4 == 0:
             data1_preprocessed.append(data1[i])
-    return data1_preprocessed, data1_class
+    return data1_preprocessed, data_class
 
-def split_into_periods(filename):
-    data1_preprocesed, data1_class = preprocess_data(filename)
+def split_into_periods(filePath):
+    data1_preprocesed, data1_class = preprocess_data(filePath)
+    if (data1_class == "none"):
+        return [], []
     
     counter = 0
     spike_start_indices = []
@@ -49,21 +56,20 @@ def split_into_periods(filename):
     return data_segments, classes
 
 
-fileNames = sys.argv[1]
+filePaths = sys.argv[1]
 testPercent = float(sys.argv[2])
 maxIter = int(sys.argv[3])
 dual = int(sys.argv[4])
 C = int(sys.argv[5])
-data = pd.read_csv(fileName)
-
+timeStamp = sys.argv[6]
 
 
 datalist = []
 categories = []
-fileNamesArray = fileNames.split(',')
-for fileName in fileNamesArray:
+filePathsArray = filePaths.split(',')
+for filePath in filePathsArray:
     try:
-        datacontents, classes = split_into_periods(fileName)
+        datacontents, classes = split_into_periods(filePath)
         if datacontents and (len(datacontents) > 0):
             datalist.extend(datacontents)
             categories.extend(classes)
@@ -82,5 +88,8 @@ y = categories
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)
 classifier = LinearSVC(max_iter=maxIter, dual=dual, C=C)
 classifier.fit(X_train, y_train)
+
+joblib.dump(classifier, "LinearSVC_"+timeStamp+".pkl")
+# print("AA")
 
 print(classifier.score(X_train, y_train))

@@ -4,71 +4,53 @@ const data = require("../../backend/data/index");
 var formidable = require('formidable')
 
 export default async (req, res) => {
-    if (req.method === 'POST') {
 
+    if (req.method === 'POST') {
         await data.initIfNotStarted();
 
         try {
             // TODO: Do some error checking here.
             var form = new formidable.IncomingForm({ keepExtensions: true });
-            
             var fields = {fileNames: []}
-
+            var date;
+            form.multiples = true;
+            
             form.parse(req)
-                // .on('fileBegin', (name, file) => {
-                //     // Set the local directory path for storing this uploaded file
-                //     file.path = 'resources/static/assets/uploads/' + name
-                //     fields.fileNames.unshift(file.path)
-
-                //     console.log("file.path")
-                //     console.log(file.path)
-                // })
+                .on('fileBegin', (name, file) => {
+                    // Set the local directory path for storing this uploaded file
+                    file.path = 'resources/static/assets/uploads/' + file.name
+                    fields.fileNames.unshift(file.path)
+                })
                 .on('field', (name, value) => {
                     // Collect name/value pairs inside "fields" object
-                    // console.log("name + value");
-                    // console.log(name, value);
-                    if (name === "files") {
-                        console.log("********************************")
-                        console.log(value[0])
-                    }
                     fields[name] = value
-                })
-                .on('file', (field, file) => {
-                    // Collect name/value pairs inside "fields" object
-                    // console.log("field + file");
-                    // console.log(field, file);
-                    fields[field] = file
                 })
                 .on('end', () => {
                     var modelAccuracy;
                     const {fileNames, mlModelName, trainPercent, testPercent, ...params} = fields;
-                    
-
                     const {maxIter, dual, C} = params;
                     Object.keys(params).map(function (key, index) { 
                         params[key] = parseInt(params[key]);            // Cast parameters to integers
                     });                                                 // Makes it type-compatible to store inside the DB
                     // var startTime = new Date();
-                    const py_process = spawn('python', ['ml_model.py', fields.fileNames.join(","), testPercent, maxIter, dual, C]) // Spawn new child process to call the python script
-                    
+                    date = new Date();
+                    const py_process = spawn('python', ['ml_model.py', fields.fileNames.join(","), testPercent, maxIter, dual, C, date.toString()]) // Spawn new child process to call the python script
+                    console.log(date.toString())
 
                     // Collect data from Python Script stdout stream
                     py_process.stdout.on('data', function (accuracyScore) {
                         console.log('Pipe data from python script ...');
                         modelAccuracy = parseFloat(parseFloat(accuracyScore.toString()).toFixed(3));
                     });
-
                     py_process.on('close', (code) => {
                         console.log(`child process close all stdio with code ${code}`);
 
                         // var endTime = new Date();
                         // var timeDiff = endTime - startTime; //in ms
-                        
                         // timeDiff /= 1000;           // strip the ms
                         // console.log("timeDiff")
                         // console.log(timeDiff)
-                        
-                        let date = new Date();
+
                         let paramsCopy = [];
                         Object.keys(params).map(function (key, index) {
                             paramsCopy.push({
@@ -76,10 +58,6 @@ export default async (req, res) => {
                                 value: params[key]
                             })
                         });
-                        console.log("paramsCopy")
-                        console.log(paramsCopy)
-                        console.log("fields")
-                        console.log(fields)
 
                         let dataToStore = 
                             {
@@ -93,8 +71,6 @@ export default async (req, res) => {
                                 }, 
                                 accuracy: modelAccuracy
                             }
-                        console.log("dataToStore")
-                        console.log(dataToStore)
                         
                         try {
                             data.results.putAll(dataToStore);

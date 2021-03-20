@@ -32,3 +32,5 @@ resources/*
 
 # other
 /pages/api/extra.js
+*.pkl
+models/*
