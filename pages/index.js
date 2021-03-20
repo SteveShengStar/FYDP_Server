@@ -11,11 +11,12 @@ import NBayesInputs from './nbayes_model'
 const SubmitButton = styled.button`
     background-color: #00cc00;
     color: #000;
+    font-size: 14px;
 
     border: 1px solid #606060;
-    border-radius: 5px;
-    width: 120px;
-    height: 25px;
+    border-radius: 3px;
+    height: 40px;
+    width: 100%;
 
     &:hover {
         color: #424242; 
@@ -124,7 +125,7 @@ const Home = () => {
             <div style={{boxSizing: 'border-box', flexBasis: '60%', backgroundColor: "#e3e3e3", borderRight: "2px solid black"}}>
               <div style={{ padding: '20px'}}>
 
-                <h2 style={{marginBottom: '30px'}}>Training Results</h2>
+                <h2 style={{marginBottom: '30px', textAlign: 'center'}}>Training Results</h2>
                 {trainingResults.length > 0 ?
                   (trainingResults.map((r, i) => (
                     <div key={i} style={{ marginBottom: '20px',
@@ -177,7 +178,7 @@ const Home = () => {
                 padding: '20px'
               }}>
                 <div>
-                  <h2 style={{marginBottom: '30px'}}>Settings Panel</h2>
+                  <h2 style={{marginBottom: '30px', textAlign: 'center'}}>Settings Panel</h2>
                   <div style={{marginBottom: '30px'}}>
                     <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>1. Upload a File containing Training Data.</h4></div>
                     <div>
@@ -199,11 +200,10 @@ const Home = () => {
                     {
                       renderFields(mlModel.value)
                     }
-                    
-                    <SubmitButton onClick={onSubmit}>
-                        Start Training
-                    </SubmitButton>
                   </div>
+                  <SubmitButton onClick={onSubmit}>
+                      Start Training
+                  </SubmitButton>
                 </div>
               </div>
             </div>
