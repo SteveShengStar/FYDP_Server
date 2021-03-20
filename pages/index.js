@@ -3,6 +3,7 @@ import Head from 'next/head'
 import styled from 'styled-components';
 import TextInput from '../components/TextInput'
 import SelectInput from '../components/SelectInput'
+import Tab from '../components/Tab'
 import FileUploadButton from '../components/FileUploadButton'
 
 import SVMInputs from './svm_model'
@@ -43,6 +44,7 @@ const Home = () => {
   });
   const [trainingResults, setTrainingResults] = useState([]);
   const [fileListExpanded, setFileListExpanded] = useState([]);
+  const [selectedTab, setSelectedTab] = useState("train");
 
   const updateForm = (mlModelName, label, value) => {
     switch(mlModelName) {
@@ -175,35 +177,46 @@ const Home = () => {
             </div>
             <div style={{boxSizing: 'border-box', flexBasis: '40%'}}>
               <div style={{
-                padding: '20px'
+                paddingTop: '20px',
+                paddingLeft: '20px',
+                paddingRight: '20px',
+                height: '100vh',
+                boxSizing: 'border-box'
               }}>
-                <div>
-                  <h2 style={{marginBottom: '30px', textAlign: 'center'}}>Settings Panel</h2>
-                  <div style={{marginBottom: '30px'}}>
-                    <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>1. Upload a File containing Training Data.</h4></div>
-                    <div>
-                      <FileUploadButton 
-                        label={uploadedFiles.length == 0 ? "No files chosen" : uploadedFiles.length.toString() + " files chosen"} 
-                        addUploadedFiles={(newFiles) => setUploadedFiles([...uploadedFiles, ...newFiles])}
-                        removeAllFiles={removeAllFiles}
-                      />
+                <div style={{display: 'flex', flexDirection: 'column', height: "100%"}}>
+                  <div style={{display: 'flex'}}>
+                    <Tab style={{marginRight: '5px'}} selected={selectedTab === 'train'} onClick={() => setSelectedTab('train')}>Train</Tab>
+                    <Tab selected={selectedTab === 'classify'} onClick={() => setSelectedTab('classify')}>Classify</Tab>
+                  </div>
+                  <div style={{marginLeft: '-20px', marginRight: '-20px', marginTop: '-1px', paddingLeft: '20px', paddingRight: '20px', 
+                                paddingTop: '20px', backgroundColor: "#e3e3e3", borderTop: '2px solid #606060', flexGrow: 1}}>
+                    <h2 style={{marginBottom: '30px', marginTop: 0, textAlign: 'center'}}>Settings Panel</h2>
+                    <div style={{marginBottom: '30px'}}>
+                      <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>1. Upload a File containing Training Data.</h4></div>
+                      <div>
+                        <FileUploadButton 
+                          label={uploadedFiles.length == 0 ? "No files chosen" : uploadedFiles.length.toString() + " files chosen"} 
+                          addUploadedFiles={(newFiles) => setUploadedFiles([...uploadedFiles, ...newFiles])}
+                          removeAllFiles={removeAllFiles}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div style={{marginBottom: '30px'}}>
-                    <h4 style={{marginBottom: '5px'}}>2. Tune the Machine Learning Parameters.</h4>
-                    <SelectInput
-                      label="Machine Learning Model"
-                      currentOpt={mlModel}
-                      handleUpdateField={(opt) => setMlModel(opt)}
-                    />
+                    <div style={{marginBottom: '30px'}}>
+                      <h4 style={{marginBottom: '5px'}}>2. Tune the Machine Learning Parameters.</h4>
+                      <SelectInput
+                        label="Machine Learning Model"
+                        currentOpt={mlModel}
+                        handleUpdateField={(opt) => setMlModel(opt)}
+                      />
 
-                    {
-                      renderFields(mlModel.value)
-                    }
+                      {
+                        renderFields(mlModel.value)
+                      }
+                    </div>
+                    <SubmitButton onClick={onSubmit}>
+                        Start Training
+                    </SubmitButton>
                   </div>
-                  <SubmitButton onClick={onSubmit}>
-                      Start Training
-                  </SubmitButton>
                 </div>
               </div>
             </div>
