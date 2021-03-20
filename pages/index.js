@@ -61,9 +61,7 @@ const Home = () => {
       mode: 'no-cors',
       method: "POST",
       headers: {
-        //"Content-Type": "multipart/form-data",
         "Accept": "application/json",
-        //"type": "formData"
       },
       body: formData
     }).then(function (res) {
