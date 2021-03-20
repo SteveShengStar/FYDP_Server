@@ -89,7 +89,7 @@ X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_
 classifier = LinearSVC(max_iter=maxIter, dual=dual, C=C)
 classifier.fit(X_train, y_train)
 
-joblib.dump(classifier, "LinearSVC_"+timeStamp+".pkl")
+# joblib.dump(classifier, "LinearSVC_"+timeStamp+".pkl")
 # print("AA")
 
 print(classifier.score(X_train, y_train))

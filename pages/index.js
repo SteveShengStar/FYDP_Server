@@ -5,6 +5,9 @@ import TextInput from '../components/TextInput'
 import SelectInput from '../components/SelectInput'
 import FileUploadButton from '../components/FileUploadButton'
 
+import SVMInputs from './svm_model'
+import NBayesInputs from './nbayes_model'
+
 const SubmitButton = styled.button`
     background-color: #00cc00;
     color: #000;
@@ -29,17 +32,24 @@ const SubmitButton = styled.button`
 const Home = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [mlModel, setMlModel] = useState("");
-  const [form, setFormValues] = useState({
-      max_iter: "",
-      dual: "",
-      C: "",
+  const [svmForm, setSvmFormValues] = useState({
+    max_iter: "",
+    dual: "",
+    C: "",
+  });
+  const [nBayesForm, setNBayesFormValues] = useState({
+    var_smoothing: ""
   });
 
-  const updateForm = (label, value) => {
-    setFormValues({
-      ...form,
-      [label]: value,
-    })
+  const updateForm = (mlModelName, label, value) => {
+    switch(mlModelName) {
+      case 'svm': 
+        setSvmFormValues({...svmForm, [label]: value})
+        break;
+      case 'naive_bayes':
+        setNBayesFormValues({...nBayesForm, [label]: value})
+        break;
+    }
   };
 
   const onSubmit = (e) => {
@@ -53,9 +63,15 @@ const Home = () => {
     formData.append('mlModelName', mlModel.value)
     formData.append('trainPercent', 0.8)
     formData.append('testPercent', 0.2)
-    formData.append('maxIter', form.max_iter)
-    formData.append('dual', form.dual)
-    formData.append('C', form.C)
+
+    if (mlModel.value === 'svm') {
+      formData.append('maxIter', svmForm.max_iter)
+      formData.append('dual', svmForm.dual)
+      formData.append('C', svmForm.C)
+    }
+    if (mlModel.value === 'naive_bayes') {
+      formData.append('varSmoothing', nBayesForm.var_smoothing)
+    }
 
     fetch("http://localhost:3000/api/putResults", {
       mode: 'no-cors',
@@ -73,19 +89,32 @@ const Home = () => {
       setUploadedFiles([])
   }
 
-  return (<div>
+  const renderFields = (mlModel) => {
+      switch(mlModel) {
+        case 'svm':
+          return (<SVMInputs 
+                    formValues={svmForm}
+                    updateForm={updateForm}
+                  />)
+          break;
+        case 'naive_bayes':
+          return (<NBayesInputs 
+                    formValues={nBayesForm}
+                    updateForm={updateForm}
+                  />)
+          break;
+        default: break;
+      }
+  }
+
+  return (<div style={{overflow: "hidden"}}>
             <Head>
                 <title>Home</title>
-                <link rel='icon' href='/favicon.ico' />
             </Head>
-            <div>
-                <div style={{float: 'left', width: '66.67%'}}>
-                  <div style={{
-                    padding: '20px'
-                  }}/>
-                </div>
+            <div style={{boxSizing: 'border-box', float: 'left', width: '66.67%', height: "700px", backgroundColor: "#F0F0F0", borderRight: "2px solid black"}}>
+              <div style={{ padding: '20px'}}></div>
             </div>
-            <div style={{float: 'left', width: '33.33%'}}>
+            <div style={{boxSizing: 'border-box', float: 'left', width: '33.33%'}}>
               <div style={{
                 padding: '20px'
               }}>
@@ -103,19 +132,13 @@ const Home = () => {
                   </div>
 
                   <SelectInput
-                    label={"Machine Learning Model"}
+                    label="Machine Learning Model"
                     currentOpt={mlModel}
                     handleUpdateField={(opt) => setMlModel(opt)}
                   />
+
                   {
-                    Object.keys(form).map((k) => (
-                      <TextInput
-                        key={k} 
-                        label={k} 
-                        currentValue={form[k]} 
-                        handleUpdateField={updateForm}
-                      />
-                    ))
+                    renderFields(mlModel.value)
                   }
                   
                   <SubmitButton onClick={onSubmit}>
