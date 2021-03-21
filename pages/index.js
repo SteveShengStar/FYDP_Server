@@ -177,7 +177,7 @@ const Home = () => {
             </div>
             <div style={{boxSizing: 'border-box', flexBasis: '40%'}}>
               <div style={{
-                paddingTop: '20px',
+                paddingTop: '10px',
                 paddingLeft: '20px',
                 paddingRight: '20px',
                 height: '100vh',
