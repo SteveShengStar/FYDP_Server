@@ -107,6 +107,11 @@ const Home = () => {
   };
 
   const onSubmitClassify = (e) => {
+
+    const formData = new FormData();    // TODO: dynamically set train/test ratio later
+    formData.append('uploadFileName', fileToClassify, fileToClassify.name);
+    formData.append('modelFileName', modelFileName);
+
     fetch("http://localhost:3000/api/classify", {
       mode: 'no-cors',
       method: "POST",
@@ -117,7 +122,8 @@ const Home = () => {
     })
     .then(res => res.json())
     .then(function (res) {
-      addTrainingResults(res.body);
+      //addTrainingResults(res.body);
+      console.log(res)
     })
   }
 

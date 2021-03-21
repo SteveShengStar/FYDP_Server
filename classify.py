@@ -1,5 +1,7 @@
 import joblib
 import sys
+
+import numpy as np
 import pandas as pd
 
 
@@ -48,26 +50,31 @@ def split_into_periods(filePath):
     return data_segments
 
 
-
 fileToClassify = sys.argv[1]
-modelFile = float(sys.argv[2])
+modelFile = sys.argv[2]
 datalist = []
 try:
     datalist.extend(split_into_periods(fileToClassify))
-except FileNotFoundError:
-    print("Failed on iteration: " + str(i))
+except FileNotFoundError as e:
+    print("Failed on iteration: " + str(e))
 areas = []
 for i in range(len(datalist)):
     areas.append(np.trapz(datalist[i][:100]))
 
 
-loaded_model = joblib.load(modelFile)
-resultSet = []
-for a in areas:
-    resultSet.append(loaded_model.predict(a))
+fileToClassify = fileToClassify[fileToClassify.rfind("/")+1:]
+outfile = open('output/classify/' + fileToClassify, 'w')
+if (len(areas) > 0):
+    df = pd.DataFrame()
+    df.insert(0, "Signal Magnitude", areas, True)
+
+    resultSet = []
+    loaded_model = joblib.load(modelFile)
+    resultSet.append(loaded_model.predict(df))
+
+    outfile.write('\n'.join(resultSet[0]))
+else:
+    outfile.write("There was no data to classify.")
 
 
-outfile = open('output/classified/' + fileToClassify, 'w')
-outfile.write(resultSet.join('\n'))
-
-print('output/classified/' + fileToClassify) 
+print('output/classify/' + fileToClassify)
