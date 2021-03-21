@@ -32,6 +32,8 @@ const SubmitButton = styled.button`
 `
 
 const Home = () => {
+  const [selectedTab, setSelectedTab] = useState("train");
+
   /* Training Tab */
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [mlModel, setMlModel] = useState("");
@@ -45,12 +47,13 @@ const Home = () => {
   });
   const [trainingResults, setTrainingResults] = useState([]);
   const [fileListExpanded, setFileListExpanded] = useState([]);
-  const [selectedTab, setSelectedTab] = useState("train");
 
   /* Classify Tab */
   const [fileToClassify, setFileToClassify] = useState(undefined);
   const [modelFileName, setModelFileName] = useState(undefined);
+  const [classifyResults, setClassifyResults] = useState([])
 
+  /* Functions to modify Local State variables for Training Tab */
   const updateForm = (mlModelName, label, value) => {
     switch(mlModelName) {
       case 'svm': 
@@ -62,13 +65,22 @@ const Home = () => {
     }
   };
 
-  const addTrainingResults = (newResultSet) => {
-    console.log("newResultSet")
-    console.log(newResultSet)
-    console.log("trainingResults")
-    console.log(trainingResults)
-    setTrainingResults([...trainingResults, newResultSet])
-    setFileListExpanded(fileListExpanded.concat(false))   // Ensure the most recent result's file list is collapsed (not expanded)
+  const renderFields = (mlModel) => {
+    switch(mlModel) {
+      case 'svm':
+        return (<SVMInputs 
+                  formValues={svmForm}
+                  updateForm={updateForm}
+                />)
+        break;
+      case 'naive_bayes':
+        return (<NBayesInputs 
+                  formValues={nBayesForm}
+                  updateForm={updateForm}
+                />)
+        break;
+      default: break;
+      }
   }
 
   const onSubmitTraining = (e) => {
@@ -106,9 +118,22 @@ const Home = () => {
     })
   };
 
-  const onSubmitClassify = (e) => {
+  const addTrainingResults = (newResultSet) => {
+    console.log("newResultSet")
+    console.log(newResultSet)
+    console.log("trainingResults")
+    console.log(trainingResults)
+    setTrainingResults([...trainingResults, newResultSet])
+    setFileListExpanded(fileListExpanded.concat(false))   // Ensure the most recent result's file list is collapsed (not expanded)
+  }
 
-    const formData = new FormData();    // TODO: dynamically set train/test ratio later
+  const removeAllFiles = () => {
+    setUploadedFiles([])
+  }
+
+  /* Functions to modify Local State variables for Classify Tab*/
+  const onSubmitClassify = (e) => {
+    const formData = new FormData();     // TODO: dynamically set train/test ratio later
     formData.append('uploadFileName', fileToClassify, fileToClassify.name);
     formData.append('modelFileName', modelFileName);
 
@@ -122,53 +147,44 @@ const Home = () => {
     })
     .then(res => res.json())
     .then(function (res) {
-      //addTrainingResults(res.body);
+      addClassifyResults(res.message);
       console.log(res)
     })
   }
 
-  const removeAllFiles = () => {
-    setUploadedFiles([])
+  const addClassifyResults = (newResultText) => {
+    setClassifyResults([...classifyResults, newResultText]);
   }
 
   const removeFileToClassify = () => {
     setFileToClassify(undefined)
   }
 
-  const renderFields = (mlModel) => {
-      switch(mlModel) {
-        case 'svm':
-          return (<SVMInputs 
-                    formValues={svmForm}
-                    updateForm={updateForm}
-                  />)
-          break;
-        case 'naive_bayes':
-          return (<NBayesInputs 
-                    formValues={nBayesForm}
-                    updateForm={updateForm}
-                  />)
-          break;
-        default: break;
-      }
-  }
-
   return (<div style={{display: 'flex', minHeight: '100vh'}}>
             <div style={{boxSizing: 'border-box', flexBasis: '60%', backgroundColor: "#e3e3e3", borderRight: "2px solid black"}}>
               <div style={{ padding: '20px'}}>
-
-                <h2 style={{marginBottom: '30px', textAlign: 'center'}}>Training Results</h2>
-                {trainingResults.length > 0 ?
-                  (trainingResults.map((r, i) => (
-                    <div key={i} style={{ marginBottom: '20px',
-                                          padding: '10px 15px',
-                                          borderRadius: '5px',
-                                          backgroundColor: '#ffffff'}}>
-                      <div>
-                        <span><b>Date:</b> {r.date}</span>
-                      </div>
-                      <div>
-                        { 
+                
+                <h2 style={{marginBottom: '30px', textAlign: 'center'}}>
+                  {selectedTab === 'train' ? 
+                    <React.Fragment>Training Results</React.Fragment>
+                    :
+                    <React.Fragment>Classify Results</React.Fragment>
+                  }
+                </h2>
+                {selectedTab === "train" ?
+                  <React.Fragment>
+                  {trainingResults.length > 0 ?
+                    <React.Fragment>
+                    {trainingResults.map((r, i) => (
+                      <div key={i} style={{ marginBottom: '20px',
+                                            padding: '10px 15px',
+                                            borderRadius: '5px',
+                                            backgroundColor: '#ffffff'}}>
+                        <div>
+                          <span><b>Date:</b> {r.date}</span>
+                        </div>
+                        <div>
+                          { 
                             fileListExpanded[i] ? 
                             <div>
                               <div>
@@ -184,25 +200,43 @@ const Home = () => {
                                 <span style={{cursor: 'pointer', textDecoration: 'underline', color: '#0000ff'}} onClick={() => setFileListExpanded(fileListExpanded.slice(0,i).concat(!fileListExpanded[i]).concat(fileListExpanded.slice(i+1)))}>Click to Expand</span></div>
                               }
                             </div> 
-                        }
+                          }
+                        </div>
+                        <div>
+                          <span><b>ML Model used:</b> {r.mlModelName}</span>
+                        </div>
+                        <div>
+                          <div><b style={{textDecoration: 'underline'}}>Parameters used:</b> {r.parameterValues.map((param, j) => <div key={j}>{param.name}: {param.value}</div>)}</div>
+                        </div>
+                        <div>
+                          <span><b>Train/Test Split:</b> {r.trainTestSplit.train * 100}:{r.trainTestSplit.test * 100}</span>
+                        </div>
+                        <div>
+                          <span><b>Accuracy achieved on validation data:</b> {r.accuracy}</span>
+                        </div>
                       </div>
-                      <div>
-                        <span><b>ML Model used:</b> {r.mlModelName}</span>
-                      </div>
-                      <div>
-                        <div><b style={{textDecoration: 'underline'}}>Parameters used:</b> {r.parameterValues.map((param, j) => <div key={j}>{param.name}: {param.value}</div>)}</div>
-                      </div>
-                      <div>
-                        <span><b>Train/Test Split:</b> {r.trainTestSplit.train * 100}:{r.trainTestSplit.test * 100}</span>
-                      </div>
-                      <div>
-                        <span><b>Accuracy achieved on validation data:</b> {r.accuracy}</span>
-                      </div>
-                    </div>
-                  ))) :
-                  <div>There are no results to show so far. Please upload a file and tune the ML parameters on the Model Settings Panel (right) to get started.</div>
+                      ))
+                      }
+                      </React.Fragment>
+                      :
+                      <div>There are no results to show so far. Please upload a file and tune the ML parameters on the Model Settings Panel (right) to get started.</div>
+                    }
+                    </React.Fragment>
+                    :
+                    <React.Fragment>
+                    {classifyResults.length > 0 ?
+                      <React.Fragment>
+                      {classifyResults.map((c_r, c_i) => 
+                        <div key={c_i} style={{ marginBottom: '20px' }}>
+                          {c_r}
+                        </div>
+                      )}
+                      </React.Fragment>
+                      :
+                      <div>There are no results to show so far. Please upload a file with data to classify on the Classify Panel (right side).</div> 
+                    }
+                    </React.Fragment>
                 }
-
               </div>
             </div>
             <div style={{boxSizing: 'border-box', flexBasis: '40%'}}>
@@ -276,7 +310,7 @@ const Home = () => {
                           <div>
                             <FileUploadButton 
                               label={modelFileName ? modelFileName : "No files chosen"} 
-                              addUploadedFiles={(file) => setModelFileName(file[0].name)}
+                              addUploadedFiles={(file) => setModelFileName(file ? file[0].name : undefined)}
                               removeAllFiles={() => setModelFileName(undefined)}
                             />
                           </div>

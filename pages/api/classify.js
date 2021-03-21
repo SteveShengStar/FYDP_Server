@@ -16,22 +16,19 @@ export default async (req, res) => {
             form.parse(req)
                 .on('fileBegin', (name, file) => {      // Set the local directory path for storing this uploaded file
                     file.path = 'resources/static/assets/uploads/classify/' + file.name
-                    console.log(name)
                     fields[name] = file.path
                 })
                 .on('field', (name, value) => {         // Collect name/value pairs inside "fields" object
                     fields[name] = value
                 })
                 .on('end', () => {
-                    console.log(fields)
+                    console.log(fields);
                     
                     py_process = 
                         spawn('python', ['classify.py', fields.uploadFileName, fields.modelFileName])
                         
                     py_process.stdout.on('data', function (fileName) {
                         console.log('Pipe data from python script ...');
-                        console.log("FileName")
-                        console.log(fileName.toString());
                         resultsFileName = fileName.toString();
                     });
                     py_process.on('close', (code) => {
