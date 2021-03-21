@@ -88,7 +88,10 @@ X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=testPercent,
 classifier = LinearSVC(max_iter=maxIter, dual=dual, C=C)
 classifier.fit(X_train, y_train)
 
-# joblib.dump(classifier, "LinearSVC_"+timeStamp+".pkl")
-# print("AA")
+# TODO: add proper error handling from Node.js
+try: 
+    joblib.dump(classifier, "LinearSVC_"+timeStamp+".pkl")
+except Exception as e:
+    print(e)
 
 print(classifier.score(X_train, y_train))

@@ -3,6 +3,12 @@ const {spawn} = require('child_process');
 const data = require("../../backend/data/index");
 var formidable = require('formidable')
 
+const formatDateTimeString = (date) => {
+    let dateString = date.toDateString().split(" ").join("_");
+    let timeString = date.getHours().toString() + "h-" + date.getMinutes().toString() + "m-" + date.getSeconds().toString() + "s"
+    return dateString + "__" + timeString
+}
+
 export default async (req, res) => {
 
     if (req.method === 'POST') {
@@ -36,13 +42,13 @@ export default async (req, res) => {
 
                     switch(mlModelName) {           // Spawn new child process to call the python script
                         case "svm":
-                            py_process = spawn('python', ['svm_model.py', fields.fileNames.join(","), testPercent, params.maxIter, params.dual, params.C, date.toString()]) 
+                            py_process = spawn('python', ['svm_model.py', fields.fileNames.join(","), testPercent, params.maxIter, params.dual, params.C, formatDateTimeString(date)]) 
                             break;
                         case "naive_bayes":         // Use Gaussian Naive Bayes model By default
-                            py_process = spawn('python', ['nbayes_model.py', fields.fileNames.join(","), testPercent, params.varSmoothing, date.toString()]) 
+                            py_process = spawn('python', ['nbayes_model.py', fields.fileNames.join(","), testPercent, params.varSmoothing, formatDateTimeString(date)]) 
                             break;
                         default:                    // Use Gaussian Naive Bayes model By default          
-                            py_process = spawn('python', ['nbayes_model.py', fields.fileNames.join(","), testPercent, params.varSmoothing, date.toString()]) 
+                            py_process = spawn('python', ['nbayes_model.py', fields.fileNames.join(","), testPercent, params.varSmoothing, formatDateTimeString(date)]) 
                     }
 
 
@@ -80,13 +86,15 @@ export default async (req, res) => {
                                 }, 
                                 accuracy: modelAccuracy
                             }
+                        console.log(dataToStore)
                         
                         try {
                             data.results.putAll(dataToStore);
+                            let dataToSend = {...dataToStore, date: formatDateTimeString(date)}
 
                             res.setHeader('Content-Type', 'application/json');
                             res.statusCode = 200;
-                            res.end( JSON.stringify({message: "Successully stored the training results.", body: dataToStore}) );
+                            res.end( JSON.stringify({message: "Successully stored the training results.", body: dataToSend}) );
                         } catch(e) {
                             res.setHeader('Content-Type', 'application/json');
                             res.statusCode = 500;

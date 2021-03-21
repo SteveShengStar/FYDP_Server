@@ -86,7 +86,7 @@ X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=testPercent,
 classifier = GaussianNB(var_smoothing=varSmoothing)
 classifier.fit(X_train, y_train)
 
-# joblib.dump(classifier, "LinearSVC_"+timeStamp+".pkl")
-# print("AA")
+# TODO: add proper error handling from Node.js
+joblib.dump(classifier, "LinearSVC_"+timeStamp+".pkl")
 
 print(classifier.score(X_train, y_train))

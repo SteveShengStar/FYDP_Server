@@ -190,7 +190,7 @@ const Home = () => {
                         <span><b>Train/Test Split:</b> {r.trainTestSplit.train * 100}:{r.trainTestSplit.test * 100}</span>
                       </div>
                       <div>
-                        <span><b>Accuracy achieved on validation data:</b> {r.modelAccuracy}</span>
+                        <span><b>Accuracy achieved on validation data:</b> {r.accuracy}</span>
                       </div>
                     </div>
                   ))) :
@@ -205,7 +205,9 @@ const Home = () => {
                 paddingLeft: '20px',
                 paddingRight: '20px',
                 height: '100vh',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                minHeight: '100vh',
+                height: '100%',
               }}>
                 <div style={{display: 'flex', flexDirection: 'column', height: "100%"}}>
                   <div style={{display: 'flex'}}>
