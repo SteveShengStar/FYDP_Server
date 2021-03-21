@@ -6,7 +6,6 @@ from sklearn.metrics import accuracy_score
 import numpy as np
 import pandas as pd
 import joblib
-import os
 import sys
 
 WINDOW = 500

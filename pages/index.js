@@ -32,6 +32,7 @@ const SubmitButton = styled.button`
 `
 
 const Home = () => {
+  /* Training Tab */
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [mlModel, setMlModel] = useState("");
   const [svmForm, setSvmFormValues] = useState({
@@ -45,6 +46,10 @@ const Home = () => {
   const [trainingResults, setTrainingResults] = useState([]);
   const [fileListExpanded, setFileListExpanded] = useState([]);
   const [selectedTab, setSelectedTab] = useState("train");
+
+  /* Classify Tab */
+  const [fileToClassify, setFileToClassify] = useState(undefined);
+  const [modelFileName, setModelFileName] = useState(undefined);
 
   const updateForm = (mlModelName, label, value) => {
     switch(mlModelName) {
@@ -66,7 +71,7 @@ const Home = () => {
     setFileListExpanded(fileListExpanded.concat(false))   // Ensure the most recent result's file list is collapsed (not expanded)
   }
 
-  const onSubmit = (e) => {
+  const onSubmitTraining = (e) => {
     e.preventDefault();
     const formData = new FormData();
 
@@ -101,8 +106,27 @@ const Home = () => {
     })
   };
 
+  const onSubmitClassify = (e) => {
+    fetch("http://localhost:3000/api/classify", {
+      mode: 'no-cors',
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+      },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(function (res) {
+      addTrainingResults(res.body);
+    })
+  }
+
   const removeAllFiles = () => {
-      setUploadedFiles([])
+    setUploadedFiles([])
+  }
+
+  const removeFileToClassify = () => {
+    setFileToClassify(undefined)
   }
 
   const renderFields = (mlModel) => {
@@ -170,7 +194,7 @@ const Home = () => {
                       </div>
                     </div>
                   ))) :
-                  <div>There are no results to show so far. Please upload a file and tune the ML parameters on the Settings Panel (right) to get started.</div>
+                  <div>There are no results to show so far. Please upload a file and tune the ML parameters on the Model Settings Panel (right) to get started.</div>
                 }
 
               </div>
@@ -190,32 +214,70 @@ const Home = () => {
                   </div>
                   <div style={{marginLeft: '-20px', marginRight: '-20px', marginTop: '-1px', paddingLeft: '20px', paddingRight: '20px', 
                                 paddingTop: '20px', backgroundColor: "#e3e3e3", borderTop: '2px solid #606060', flexGrow: 1}}>
-                    <h2 style={{marginBottom: '30px', marginTop: 0, textAlign: 'center'}}>Settings Panel</h2>
-                    <div style={{marginBottom: '30px'}}>
-                      <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>1. Upload a File containing Training Data.</h4></div>
-                      <div>
-                        <FileUploadButton 
-                          label={uploadedFiles.length == 0 ? "No files chosen" : uploadedFiles.length.toString() + " files chosen"} 
-                          addUploadedFiles={(newFiles) => setUploadedFiles([...uploadedFiles, ...newFiles])}
-                          removeAllFiles={removeAllFiles}
-                        />
-                      </div>
-                    </div>
-                    <div style={{marginBottom: '30px'}}>
-                      <h4 style={{marginBottom: '5px'}}>2. Tune the Machine Learning Parameters.</h4>
-                      <SelectInput
-                        label="Machine Learning Model"
-                        currentOpt={mlModel}
-                        handleUpdateField={(opt) => setMlModel(opt)}
-                      />
+                    <h2 style={{marginBottom: '30px', marginTop: 0, textAlign: 'center'}}>
+                        {
+                          (selectedTab === 'train') ? 
+                            <span>Model Settings</span> : 
+                            <span>Classification</span>
+                        }
+                    </h2>
+                    {
+                      (selectedTab === 'train') ? 
+                      <>
+                        <div style={{marginBottom: '30px'}}>
+                          <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>1. Upload a File containing Training Data.</h4></div>
+                          <div>
+                            <FileUploadButton 
+                              label={uploadedFiles.length == 0 ? "No files chosen" : uploadedFiles.length.toString() + " files chosen"} 
+                              addUploadedFiles={(newFiles) => setUploadedFiles([...uploadedFiles, ...newFiles])}
+                              removeAllFiles={removeAllFiles}
+                              multiple={true}
+                            />
+                          </div>
+                        </div>
+                        <div style={{marginBottom: '30px'}}>
+                          <h4 style={{marginBottom: '5px'}}>2. Tune the Machine Learning Parameters.</h4>
+                          <SelectInput
+                            label="Machine Learning Model"
+                            currentOpt={mlModel}
+                            handleUpdateField={(opt) => setMlModel(opt)}
+                          />
 
-                      {
-                        renderFields(mlModel.value)
-                      }
-                    </div>
-                    <SubmitButton onClick={onSubmit}>
-                        Start Training
-                    </SubmitButton>
+                          {
+                            renderFields(mlModel.value)
+                          }
+                        </div>
+                        <SubmitButton onClick={onSubmitTraining}>
+                            Start Training
+                        </SubmitButton>
+                      </>
+                      :
+                      <>
+                        <div style={{marginBottom: '30px'}}>
+                          <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>1. Upload a File containing the Data to Classify.</h4></div>
+                          <div>
+                            <FileUploadButton 
+                              label={fileToClassify ? fileToClassify.name : "No file chosen"} 
+                              addUploadedFiles={(newFile) => setFileToClassify(newFile[0])}
+                              removeAllFiles={removeFileToClassify}
+                            />
+                          </div>
+                        </div>
+                        <div style={{marginBottom: '30px'}}>
+                          <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>2. Choose the ML Model .pkl file.</h4></div>
+                          <div>
+                            <FileUploadButton 
+                              label={modelFileName ? modelFileName : "No files chosen"} 
+                              addUploadedFiles={(file) => setModelFileName(file[0].name)}
+                              removeAllFiles={() => setModelFileName(undefined)}
+                            />
+                          </div>
+                        </div>
+                        <SubmitButton onClick={onSubmitClassify}>
+                            Start Classifying
+                        </SubmitButton>
+                      </>
+                    }
                   </div>
                 </div>
               </div>

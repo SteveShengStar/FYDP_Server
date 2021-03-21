@@ -17,7 +17,7 @@ export default async (req, res) => {
             
             form.parse(req)
                 .on('fileBegin', (name, file) => {      // Set the local directory path for storing this uploaded file
-                    file.path = 'resources/static/assets/uploads/' + file.name
+                    file.path = 'resources/static/assets/uploads/train/' + file.name
                     fields.fileNames.unshift(file.path)
                 })
                 .on('field', (name, value) => {         // Collect name/value pairs inside "fields" object
