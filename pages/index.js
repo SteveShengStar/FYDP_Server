@@ -142,6 +142,7 @@ const Home = () => {
     const formData = new FormData();     // TODO: dynamically set train/test ratio later
     formData.append('uploadFileName', fileToClassify, fileToClassify.name);
     formData.append('modelFileName', modelFileName);
+    formData.append('mode', diffMode.value)
 
     fetch("http://localhost:3000/api/classify", {
       mode: 'no-cors',

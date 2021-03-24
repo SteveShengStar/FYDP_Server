@@ -25,7 +25,7 @@ export default async (req, res) => {
                     console.log(fields);
                     
                     py_process = 
-                        spawn('python', ['classify.py', fields.uploadFileName, fields.modelFileName])
+                        spawn('python', ['classify.py', fields.uploadFileName, fields.modelFileName, fields.mode])
                         
                     py_process.stdout.on('data', function (fileName) {
                         console.log('Pipe data from python script ...');
