@@ -46,6 +46,9 @@ const TrainingData = new Schema({
     },
     accuracy: {
         type: Number
+    },
+    mode: {
+        type: String
     }
 });
 TrainingData.plugin(uniqueValidator);

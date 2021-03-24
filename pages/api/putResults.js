@@ -31,7 +31,7 @@ export default async (req, res) => {
                 })
                 .on('end', () => {
                     var modelAccuracy;
-                    const {fileNames, mlModelName, trainPercent, testPercent, ...params} = fields;
+                    const {fileNames, mlModelName, trainPercent, testPercent, mode, ...params} = fields;
                     let py_process;
                     
                     Object.keys(params).map(function (key, index) { 
@@ -42,13 +42,13 @@ export default async (req, res) => {
 
                     switch(mlModelName) {           // Spawn new child process to call the python script
                         case "svm":
-                            py_process = spawn('python', ['svm_model.py', fields.fileNames.join(","), testPercent, params.maxIter, params.dual, params.C, formatDateTimeString(date)]) 
+                            py_process = spawn('python', ['svm_model.py', fields.fileNames.join(","), testPercent, params.maxIter, params.dual, params.C, formatDateTimeString(date), mode]) 
                             break;
                         case "naive_bayes":         // Use Gaussian Naive Bayes model By default
-                            py_process = spawn('python', ['nbayes_model.py', fields.fileNames.join(","), testPercent, params.varSmoothing, formatDateTimeString(date)]) 
+                            py_process = spawn('python', ['nbayes_model.py', fields.fileNames.join(","), testPercent, params.varSmoothing, formatDateTimeString(date), mode]) 
                             break;
                         default:                    // Use Gaussian Naive Bayes model By default          
-                            py_process = spawn('python', ['nbayes_model.py', fields.fileNames.join(","), testPercent, params.varSmoothing, formatDateTimeString(date)]) 
+                            py_process = spawn('python', ['nbayes_model.py', fields.fileNames.join(","), testPercent, params.varSmoothing, formatDateTimeString(date), mode]) 
                     }
 
 
@@ -84,7 +84,8 @@ export default async (req, res) => {
                                     train: parseFloat(trainPercent), 
                                     test: parseFloat(testPercent)
                                 }, 
-                                accuracy: modelAccuracy
+                                accuracy: modelAccuracy,
+                                mode: mode
                             }
                         console.log(dataToStore)
                         

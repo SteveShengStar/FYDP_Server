@@ -31,6 +31,13 @@ const SubmitButton = styled.button`
     }
 `
 
+const modelTypes = [
+  { value: '0', label: 'Please Select ...', isDisabled: true },
+  { value: 'svm', label: 'SVM' },
+  { value: 'random_forest', label: 'Random Forest' },
+  { value: 'naive_bayes', label: 'Naive Bayes' },
+];
+
 const Home = () => {
   const [selectedTab, setSelectedTab] = useState("train");
 
@@ -51,7 +58,9 @@ const Home = () => {
   /* Classify Tab */
   const [fileToClassify, setFileToClassify] = useState(undefined);
   const [modelFileName, setModelFileName] = useState(undefined);
-  const [classifyResults, setClassifyResults] = useState([])
+  const [classifyResults, setClassifyResults] = useState([]);
+
+  const [diffMode, setDiffMode] = useState('0');
 
   /* Functions to modify Local State variables for Training Tab */
   const updateForm = (mlModelName, label, value) => {
@@ -91,6 +100,7 @@ const Home = () => {
       var file = uploadedFiles[i];
       formData.append('uploads[]', file, file.name);
     }
+    formData.append('mode', diffMode.value)
     formData.append('mlModelName', mlModel.value)
     formData.append('trainPercent', 0.8)
     formData.append('testPercent', 0.2)
@@ -119,10 +129,6 @@ const Home = () => {
   };
 
   const addTrainingResults = (newResultSet) => {
-    console.log("newResultSet")
-    console.log(newResultSet)
-    console.log("trainingResults")
-    console.log(trainingResults)
     setTrainingResults([...trainingResults, newResultSet])
     setFileListExpanded(fileListExpanded.concat(false))   // Ensure the most recent result's file list is collapsed (not expanded)
   }
@@ -214,6 +220,9 @@ const Home = () => {
                         <div>
                           <span><b>Accuracy achieved on validation data:</b> {r.accuracy}</span>
                         </div>
+                        <div>
+                          <span><b>Classification Mode:</b> {r.mode == '1' ? "Ambient Noise vs. Discharge" : "Silence vs. Discharge"}</span>
+                        </div>
                       </div>
                       ))
                       }
@@ -263,11 +272,25 @@ const Home = () => {
                             <span>Classification</span>
                         }
                     </h2>
+                    <div style={{marginBottom: '30px'}}>
+                        <h4 style={{marginBottom: '5px'}}>1. Which classes are you differentiating between?</h4>
+                        <SelectInput
+                          label="Mode of Differentiation"
+                          currentOpt={diffMode}
+                          handleUpdateField={(opt) => setDiffMode(opt)}
+                          options={[
+                            { value: '0', label: 'Please Select ...', isDisabled: true },
+                            { value: '1', label: 'Ambient Noise and Discharge' },
+                            { value: '2', label: 'Silence and Discharge' }
+                          ]}
+                        />
+                    </div>
+
                     {
                       (selectedTab === 'train') ? 
                       <>
                         <div style={{marginBottom: '30px'}}>
-                          <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>1. Upload a File containing Training Data.</h4></div>
+                          <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>2. Upload a File containing Training Data.</h4></div>
                           <div>
                             <FileUploadButton 
                               label={uploadedFiles.length == 0 ? "No files chosen" : uploadedFiles.length.toString() + " files chosen"} 
@@ -278,11 +301,12 @@ const Home = () => {
                           </div>
                         </div>
                         <div style={{marginBottom: '30px'}}>
-                          <h4 style={{marginBottom: '5px'}}>2. Tune the Machine Learning Parameters.</h4>
+                          <h4 style={{marginBottom: '5px'}}>3. Tune the Machine Learning Parameters.</h4>
                           <SelectInput
                             label="Machine Learning Model"
                             currentOpt={mlModel}
                             handleUpdateField={(opt) => setMlModel(opt)}
+                            options={modelTypes}
                           />
 
                           {
@@ -296,7 +320,7 @@ const Home = () => {
                       :
                       <>
                         <div style={{marginBottom: '30px'}}>
-                          <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>1. Upload a File containing the Data to Classify.</h4></div>
+                          <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>2. Upload a File containing the Data to Classify.</h4></div>
                           <div>
                             <FileUploadButton 
                               label={fileToClassify ? fileToClassify.name : "No file chosen"} 
@@ -306,12 +330,13 @@ const Home = () => {
                           </div>
                         </div>
                         <div style={{marginBottom: '30px'}}>
-                          <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>2. Choose the ML Model .pkl file.</h4></div>
+                          <div style={{marginBottom: '5px'}}><h4 style={{margin: 0}}>3. Choose the ML Model .pkl file.</h4></div>
                           <div>
                             <FileUploadButton 
                               label={modelFileName ? modelFileName : "No files chosen"} 
                               addUploadedFiles={(file) => setModelFileName(file ? file[0].name : undefined)}
                               removeAllFiles={() => setModelFileName(undefined)}
+                              options={modelTypes}
                             />
                           </div>
                         </div>

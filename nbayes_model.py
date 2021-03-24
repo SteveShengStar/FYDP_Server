@@ -2,63 +2,19 @@
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from helpers import split_into_periods
 
 import numpy as np
 import pandas as pd
 import joblib
 import sys
 
-WINDOW = 500
-THRESHOLD = 600
-
-def preprocess_data(filePath):
-    try:
-        raw = pd.read_csv(filePath)
-    except:
-        return [], "none"
-
-    data_class = raw.columns[0]
-    raw = raw.iloc[:,0]  # Take the first column only
-    raw = raw.values     # Convert the pd.Series object into a numpy.ndarray
-    
-    data1 = [int(d) for d in raw]
-    data1_preprocessed = []
-    for i in range(len(data1)):
-        if i % 4 == 0:
-            data1_preprocessed.append(data1[i])
-    return data1_preprocessed, data_class
-
-def split_into_periods(filePath):
-    data1_preprocesed, data1_class = preprocess_data(filePath)
-    if (data1_class == "none"):
-        return [], []
-    
-    counter = 0
-    spike_start_indices = []
-    spike_detected = False
-    for d_i in range(len(data1_preprocesed)):
-        if (data1_preprocesed[d_i] > THRESHOLD) and spike_detected == False:
-            spike_detected = True;
-            spike_start_indices.append(d_i - 10)
-        if spike_detected:
-            if counter < WINDOW:
-                counter += 1
-            else:
-                spike_detected = False;
-                counter = 0
-    
-    data_segments = []
-    for s_i in range(len(spike_start_indices) - 1):
-        data_segments.append(data1_preprocesed[spike_start_indices[s_i]:spike_start_indices[s_i+1]])
-    classes = [data1_class] * len(data_segments)
-
-    return data_segments, classes
-
 
 filePaths = sys.argv[1]
 testPercent = float(sys.argv[2])
-varSmoothing = int(sys.argv[3])
+varSmoothing = float(sys.argv[3])
 timeStamp = sys.argv[4]
+mode = sys.argv[5]
 
 
 datalist = []
@@ -72,21 +28,44 @@ for filePath in filePathsArray:
             categories.extend(classes)
     except FileNotFoundError:
         print("Failed on iteration: " + str(i))
-areas = []
-for i in range(len(datalist)):
-    areas.append(np.trapz(datalist[i][:100]))
+
+# Differentiate between External Noise and Electrical Discharge Signals
+final_categories = []
+if (mode == '1'):
+    all_stats = {
+        "Mean Sector 1": [],
+        "Mean Sector 2": [],
+        "Standard Deviation Sector 1": [],
+        "Standard Deviation Sector 2": []
+    }
+    for i in range(len(datalist)):
+        if len(datalist[i]) > 0:
+            all_stats["Mean Sector 1"].append(sum(datalist[i][:100]) / 100)
+            all_stats["Mean Sector 2"].append(sum(datalist[i][100:300]) / 200)
+            all_stats["Standard Deviation Sector 1"].append(np.std(datalist[i][:100]))
+            all_stats["Standard Deviation Sector 2"].append(np.std(datalist[i][100:300]))
+            final_categories.append(categories[i])
+else:
+    all_stats = {
+        "Area": [],
+        "Std Dev": [],
+        "Mean": [],
+    }
+    for i in range(len(datalist)):
+        if (len(datalist[i]) > 0):
+            all_stats["Area"].append(np.trapz(datalist[i][:100]))
+            all_stats["Std Dev"].append(np.std(datalist[i][:100]))
+            all_stats["Mean"].append(np.mean(datalist[i][:100]))
+            final_categories.append(categories[i])
+
+x = pd.DataFrame(data=all_stats)
 
 
-x = pd.DataFrame()
-x.insert(0, "Area", areas, True)
-y = categories
-
-
-X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=testPercent, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(x, final_categories, test_size=testPercent, random_state=0)
 classifier = GaussianNB(var_smoothing=varSmoothing)
 classifier.fit(X_train, y_train)
 
 # TODO: add proper error handling from Node.js
-joblib.dump(classifier, "LinearSVC_"+timeStamp+".pkl")
+joblib.dump(classifier, "GaussianNB_"+timeStamp+"_mode" + mode + ".pkl")
 
-print(classifier.score(X_train, y_train))
+print(classifier.score(X_test, y_test))
